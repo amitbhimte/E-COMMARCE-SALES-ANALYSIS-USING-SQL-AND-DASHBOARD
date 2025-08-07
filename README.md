@@ -61,3 +61,7 @@ COD is the most preferred payment mode
 Top customers include Hitesh, Shruti, Tulika, and Anurag
 
 Printers and Chairs were among the most profitable sub-categories
+Screenshots / Demos
+Show what the dashboard looks like:-[Alt text](https://github.com/amitbhimte/E-COMMARCE-SALES-ANALYSIS-USING-SQL-AND-DASHBOARD/blob/main/Snapshot%20of%20the%20Dashboard.png)
+Example: [Dashboard
+Preview] (https://github.com/amitbhimte/E-COMMARCE-SALES-ANALYSIS-USING-SQL-AND-DASHBOARD/blob/main/Snapshot%20of%20the%20Dashboard.png)
