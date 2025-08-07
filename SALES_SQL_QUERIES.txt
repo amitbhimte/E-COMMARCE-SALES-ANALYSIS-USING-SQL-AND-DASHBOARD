@@ -1,0 +1,148 @@
+CREATE DATABASE ECOMMARCE
+SELECT * FROM sales_detailed
+DESCRIBE sales_detailed
+UPDATE sales_detailed
+SET `Order Date` = STR_TO_DATE(`Order Date`, '%d-%m-%Y');
+ALTER TABLE sales_detailed
+MODIFY `Order Date` DATE;
+-- Total sales for May
+SELECT SUM(Amount) AS total_sales_may
+FROM sales_detailed
+WHERE MONTH(`Order Date`) = 5;
+--  Month-over-month (MoM) sales difference and growth
+SELECT 
+    MONTH(`Order Date`) AS month,
+    SUM(Amount) AS total_sales,
+    LAG(SUM(Amount)) OVER (ORDER BY MONTH(`Order Date`)) AS previous_month_sales,
+    ROUND(
+        (SUM(Amount) - LAG(SUM(Amount)) OVER (ORDER BY MONTH(`Order Date`)))
+        / LAG(SUM(Amount)) OVER (ORDER BY MONTH(`Order Date`)) * 100, 2
+    ) AS mom_growth_percent
+FROM sales_detailed
+GROUP BY MONTH(`Order Date`)
+ORDER BY month;
+-- Total number of orders in May
+USE ECOMMARCE;
+SELECT COUNT(DISTINCT `Order ID`) AS total_orders_may
+FROM sales_detailed
+WHERE MONTH(`Order Date`) = 5;
+-- Month-over-Month (MoM) difference and growth in total orders
+SELECT 
+    MONTH(`Order Date`) AS month,
+    COUNT(DISTINCT `Order ID`) AS total_orders,
+    LAG(COUNT(DISTINCT `Order ID`)) OVER (ORDER BY MONTH(`Order Date`)) AS previous_month_orders,
+    ROUND(
+        (COUNT(DISTINCT `Order ID`) - LAG(COUNT(DISTINCT `Order ID`)) OVER (ORDER BY MONTH(`Order Date`)))
+        / LAG(COUNT(DISTINCT `Order ID`)) OVER (ORDER BY MONTH(`Order Date`)) * 100, 2
+    ) AS mom_growth_percent
+FROM sales_detailed
+GROUP BY MONTH(`Order Date`)
+ORDER BY month;
+-- Total quantity sold in May
+SELECT SUM(Quantity) AS total_quantity_may
+FROM sales_detailed
+WHERE MONTH(`Order Date`) = 5;
+-- MoM difference and growth in quantity sold
+SELECT 
+    MONTH(`Order Date`) AS month,
+    SUM(Quantity) AS total_quantity,
+    LAG(SUM(Quantity)) OVER (ORDER BY MONTH(`Order Date`)) AS previous_month_quantity,
+    ROUND(
+        (SUM(Quantity) - LAG(SUM(Quantity)) OVER (ORDER BY MONTH(`Order Date`)))
+        / LAG(SUM(Quantity)) OVER (ORDER BY MONTH(`Order Date`)) * 100, 2
+    ) AS mom_growth_percent
+FROM sales_detailed
+GROUP BY MONTH(`Order Date`)
+ORDER BY month;
+-- Total sales, quantity, and orders for a specific date
+SELECT 
+    `Order Date`,
+    SUM(Amount) AS total_sales,
+    SUM(Quantity) AS total_quantity,
+    COUNT(DISTINCT `Order ID`) AS total_orders
+FROM sales_detailed
+WHERE `Order Date` = '2018-03-10'
+GROUP BY `Order Date`;
+-- Show results in “K” format (rounded)
+SELECT 
+    `Order Date`,
+    ROUND(SUM(Amount)/1000, 2) AS total_sales_k,
+    ROUND(SUM(Quantity)/1000, 2) AS total_quantity_k,
+    ROUND(COUNT(DISTINCT `Order ID`)/1000, 2) AS total_orders_k
+FROM sales_detailed
+WHERE `Order Date` = '2018-03-10'
+GROUP BY `Order Date`;
+-- Average daily sales for May
+SELECT 
+    ROUND(AVG(daily_sales), 2) AS avg_daily_sales_may
+FROM (
+    SELECT `Order Date`, SUM(Amount) AS daily_sales
+    FROM sales_detailed
+    WHERE MONTH(`Order Date`) = 5
+    GROUP BY `Order Date`
+) AS sub;
+-- Above/Below Average Sales
+WITH daily_data AS (
+    SELECT 
+        `Order Date`,
+        SUM(Amount) AS daily_sales
+    FROM sales_detailed
+    WHERE MONTH(`Order Date`) = 5
+    GROUP BY `Order Date`
+),
+avg_data AS (
+    SELECT ROUND(AVG(daily_sales), 2) AS avg_sales FROM daily_data
+)
+SELECT 
+    d.`Order Date`,
+    d.daily_sales,
+    a.avg_sales,
+    CASE 
+        WHEN d.daily_sales >= a.avg_sales THEN 'Above Average'
+        ELSE 'Below Average'
+    END AS sales_performance
+FROM daily_data d, avg_data a
+ORDER BY d.`Order Date`;
+-- Compare weekday vs weekend sales
+SELECT 
+    CASE 
+        WHEN DAYOFWEEK(`Order Date`) IN (1,7) THEN 'Weekend'
+        ELSE 'Weekday'
+    END AS day_type,
+    SUM(Amount) AS total_sales
+FROM sales_detailed
+GROUP BY day_type;
+-- Sales by State or City
+-- By State
+SELECT State, SUM(Amount) AS total_sales
+FROM sales_detailed
+GROUP BY State
+ORDER BY total_sales DESC;
+
+-- OR by City
+SELECT City, SUM(Amount) AS total_sales
+FROM sales_detailed
+GROUP BY City
+ORDER BY total_sales DESC;
+-- Sales by Category and Sub-Category
+-- By Category
+SELECT Category, SUM(Amount) AS total_sales
+FROM sales_detailed
+GROUP BY Category
+ORDER BY total_sales DESC;
+
+-- By Sub-Category
+SELECT `Sub-Category`, SUM(Amount) AS total_sales
+FROM sales_detailed
+GROUP BY `Sub-Category`
+ORDER BY total_sales DESC;
+-- Top 10 Best-Selling Sub-Categories
+SELECT `Sub-Category`, SUM(Quantity) AS total_quantity
+FROM sales_detailed
+GROUP BY `Sub-Category`
+ORDER BY total_quantity DESC
+LIMIT 10;
+
+
+
+
